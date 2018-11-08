@@ -1,0 +1,59 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Basic ELB setup",
+  "Metadata": {
+
+  },
+  "Parameters": {
+    "VPCID": {
+      "Type": "AWS::EC2::VPC::Id",
+      "Description": "The VPC in which your targets are located."
+    },
+    "PublicSubnets": {
+      "Type": "List<AWS::EC2::Subnet::Id>",
+      "Description": "Enter the subnet ids for your public subnets."
+    },
+    "ELBSecurityGroup": {
+      "Type": "List<AWS::EC2::SecurityGroup::Id>",
+      "Description": "Enter one or more security group ids."
+    }
+  },
+  "Mappings": {
+
+  },
+  "Conditions": {
+
+  },
+  "Resources": {
+    "ELBWeb": {
+      "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+      "Properties": {
+        "LoadBalancerName": "ELBWeb",
+        "Subnets": {
+          "Ref": "PublicSubnets"
+        },
+        "CrossZone": "true",
+        "SecurityGroups": {
+          "Ref": "ELBSecurityGroup"
+        },
+        "Listeners": [{
+          "LoadBalancerPort": "80",
+          "InstancePort": "80",
+          "Protocol": "HTTP"
+        }],
+        "HealthCheck": {
+          "Target": {
+            "Fn::Join": ["", ["HTTP:", "80", "/index.html"]],
+            "HealthyThreshold": "2",
+            "UnhealthyThreshold": "2",
+            "Interval": "20",
+            "Timeout": "5",
+          }
+        }
+      }
+    }
+  },
+  "Outputs": {
+
+  }
+}

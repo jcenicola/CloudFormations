@@ -1,0 +1,204 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "create an instance with security group and vpc",
+  "Metadata": {
+
+  },
+  "Parameters": {
+    "Subnet1AZs": {
+      "Description": "Choose AZ for Subnet1",
+      "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "Subnet2AZs": {
+      "Description": "Choose AZ for Subnet2",
+      "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "Subnet3AZs": {
+      "Description": "Choose AZ for Priv-Subnet1",
+      "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "Subnet4AZs": {
+      "Description": "Choose AZ for Priv-Subnet2",
+      "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "WebServersSG": {
+      "Description": "-",
+      "Type": "AWS::EC2::SecurityGroup::GroupName"
+    },
+    "Subnet1": {
+      "Description": "Choose Ids for your subnets",
+      "Type": "List<AWS::EC2::Subnet::Id>"
+    },
+    "Subnet2": {
+      "Description": "Choose Ids for your subnets",
+      "Type": "List<AWS::EC2::Subnet::Id>"
+    },
+    "Webserverkeyname": {
+      "Description": "Web server key name",
+      "Type": "AWS::EC2::KeyPair::KeyName"
+    },
+    "InstanceType": {
+      "Description": "Choose Instance Type",
+      "Type": "String",
+      "Default": "t2.micro"
+    },
+    "WebserverAMI": {
+      "Description": "Add AMI for web server",
+      "Type": "String"
+    }
+  },
+
+  "Mappings": {
+    "RegionMap": {
+      "us-east-1": {
+        "64": "ami-0ff8a91507f77f867"
+      },
+      "us-east-2": {
+        "64": " ami-0b59bfac6be064b78"
+      }
+    }
+  },
+  "Conditions": {
+
+  },
+  "Resources": {
+    "Webserver01": {
+      "Type": "AWS::EC2::Instance",
+      "Metadata": {
+        "AWS::CloudFormation::Init": {
+          "config": {
+            "packages": {
+              "yum": {
+                "httpd": []
+              }
+            },
+            "groups": {},
+            "users": {},
+            "sources": {},
+            "files": {
+              "/var/www/html/index.html": {
+                "content": "<h1> This works Fine!!</h1>"
+              }
+            },
+            "commands": {},
+            "services": {
+              "sysvinit": {
+                "httpd": {
+                  "enabled": "true",
+                  "ensureRunning": "true"
+                }
+              }
+            }
+          }
+        }
+      },
+      "Properties": {
+        "KeyName": {
+          "Ref": "Webserverkeyname"
+        },
+        "SubnetId": {
+          "Ref": "Subnet1"
+        },
+        "ImageId": {
+          "Fn::FindInMap": [
+            "RegionMap",
+            {
+              "Ref": "AWS::Region"
+            },
+            "64"
+          ]
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "Monitoring": "false",
+        "SecurityGroupIds": [{
+          "Ref": "WebServersSG"
+        }],
+        "Tags": [{
+          "Key": "Name",
+          "Value": "Webserver01"
+        }],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -ex \n",
+                "# Install the files and packages from Metedata\n",
+                "/opt/aws/bin/cfn-init -v ",
+                "       --stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "       --resource Webserver01 ",
+                "       --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "Webserver02": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "KeyName": {
+          "Ref": "Webserverkeyname"
+        },
+        "SubnetId": {
+          "Ref": "Subnet2"
+        },
+        "ImageId": {
+          "Fn::FindInMap": [
+            "RegionMap",
+            {
+              "Ref": "AWS::Region"
+            },
+            "64"
+          ]
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "Monitoring": "false",
+        "SecurityGroupIds": [{
+          "Ref": "WebServersSG"
+        }],
+        "Tags": [{
+          "Key": "Name",
+          "Value": "Webserver02"
+        }],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -ex \n",
+                "# Install the files and packages from Metedata\n",
+                "/opt/aws/bin/cfn-init -v ",
+                "       --stack ",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "       --resource Webserver01 ",
+                "       --region ",
+                {
+                  "Ref": "AWS::Region"
+                },
+                "\n"
+              ]
+            ]
+          }
+        }
+      }
+    }
+  },
+
+  "Outputs": {
+
+  }
+}

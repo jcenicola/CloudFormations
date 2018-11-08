@@ -40,11 +40,24 @@
     "Subnet4AZs": {
       "Description": "Choose AZ for Priv-Subnet2",
       "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "WebserverKeyName": {
+      "Description": "Choose Key Name",
+      "Type": "AWS::EC2::KeyPair::KeyName"
+    },
+    "WebServerInstanceType": {
+      "Description": "Choose Instance WebServerInstanceType",
+      "Type": "String",
+      "Default": "t2.micro",
+      "AllowedValues": ["t2.micro", "t2.nano", "t2.small"]
     }
   },
-
   "Mappings": {
-
+    "AMIID": {
+      "us-east-1": {
+        "64": "ami-01d7e86db68c3fbf5"
+      },
+    }
   },
   "Conditions": {
 
@@ -156,7 +169,7 @@
       "Type": "AWS::EC2::NatGateway",
       "Properties": {
         "SubnetId": {
-          "Ref": "Subnet2"
+          "Ref": "Subnet1"
         },
         "AllocationId": {
           "Fn::GetAtt": [
@@ -268,9 +281,35 @@
           "Ref": "SubnetRTpriv"
         }
       }
+    },
+    "WebServersSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupName": "MyServerSG",
+        "GroupDescription": "SG Created for Web Servers",
+        "VpcId": {
+          "Ref": "MyVpc"
+        },
+        "SecurityGroupIngress": [{
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [{
+          "Key": "Name",
+          "Value": "WebServersSG"
+        }]
+      }
     }
   },
-
   "Outputs": {
 
   }

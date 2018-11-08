@@ -40,6 +40,19 @@
     "Subnet4AZs": {
       "Description": "Choose AZ for Priv-Subnet2",
       "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "Webserverkeyname": {
+      "Description": "Web server key name",
+      "Type": "AWS::EC2::KeyPair::KeyName"
+    },
+    "InstanceType": {
+      "Description": "Choose Instance Type",
+      "Type": "String",
+      "Default": "t2.micro"
+    },
+    "WebserverAMI": {
+      "Description": "Add AMI for web server",
+      "Type": "String"
     }
   },
 
@@ -266,6 +279,74 @@
         },
         "RouteTableId": {
           "Ref": "SubnetRTpriv"
+        }
+      }
+    },
+    "WebServersSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupName": "MyServerSG",
+        "GroupDescription": "SG Created for Web Servers",
+        "VpcId": {
+          "Ref": "MyVpc"
+        },
+        "SecurityGroupIngress": [{
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [{
+          "Key": "Name",
+          "Value": "WebServersSG"
+        }]
+      }
+    },
+    "Webserver01": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "KeyName": {
+          "Ref": "Webserverkeyname"
+        },
+        "SubnetId": {
+          "Ref": "Subnet1"
+        },
+        "ImageId": {
+          "Ref": "WebserverAMI"
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "Monitoring": "false",
+        "SecurityGroupIds": [{
+          "Ref": "WebServersSG"
+        }],
+        "Tags": [{
+          "Key": "Name",
+          "Value": "Webserver01"
+        }],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash -ex \n",
+                "sudo -i \n",
+                "yum install httpd -y \n",
+                "chkconfig httpd on \n",
+                "service httpd start \n",
+                "echo '<h1> This Worked!! </h1>' > /var/www/html/index.html \n",
+                "exit \n"
+              ]
+            ]
+          }
         }
       }
     }

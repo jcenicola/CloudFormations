@@ -40,11 +40,14 @@
     "Subnet4AZs": {
       "Description": "Choose AZ for Priv-Subnet2",
       "Type": "AWS::EC2::AvailabilityZone::Name"
-    }
+    },
   },
-
   "Mappings": {
-
+    "AMIID": {
+      "us-east-1": {
+        "64": "ami-01d7e86db68c3fbf5"
+      },
+    }
   },
   "Conditions": {
 
@@ -156,7 +159,7 @@
       "Type": "AWS::EC2::NatGateway",
       "Properties": {
         "SubnetId": {
-          "Ref": "Subnet2"
+          "Ref": "Subnet1"
         },
         "AllocationId": {
           "Fn::GetAtt": [
@@ -270,7 +273,6 @@
       }
     }
   },
-
   "Outputs": {
 
   }

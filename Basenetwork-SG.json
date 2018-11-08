@@ -1,0 +1,53 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Security Group for MyVpc",
+  "Metadata": {
+
+  },
+  "Parameters": {
+    "MyVpc": {
+      "Description": "-",
+      "Type": "AWS::EC2::VPC::Id"
+    }
+  },
+
+  "Mappings": {
+
+  },
+  "Conditions": {
+
+  },
+  "Resources": {
+    "WebServersSG": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupName": "WebServersSG",
+        "GroupDescription": "SG Created for Web Servers",
+        "VpcId": {
+          "Ref": "MyVpc"
+        },
+        "SecurityGroupIngress": [{
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "Tags": [{
+          "Key": "Name",
+          "Value": "WebServersSG"
+        }]
+      }
+    }
+  },
+
+  "Outputs": {
+
+  }
+}
