@@ -1,0 +1,277 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "My Base network:VPC,Network,NAT gateway",
+  "Metadata": {
+
+  },
+  "Parameters": {
+    "Subnet1Cidr": {
+      "Description": "Choose Cidr for Subnet1",
+      "Type": "String",
+      "Default": "10.0.1.1/24"
+    },
+    "Subnet2Cidr": {
+      "Description": "Choose Cidr for Subnet2",
+      "Type": "String",
+      "Default": "10.0.2.1/24"
+    },
+    "Subnet3Cidr": {
+      "Description": "Choose Cidr for Subnet1",
+      "Type": "String",
+      "Default": "10.0.3.1/24"
+    },
+    "Subnet4Cidr": {
+      "Description": "Choose Cidr for Subnet2",
+      "Type": "String",
+      "Default": "10.0.4.1/24"
+    },
+    "Subnet1AZs": {
+      "Description": "Choose AZ for Subnet1",
+      "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "Subnet2AZs": {
+      "Description": "Choose AZ for Subnet2",
+      "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "Subnet3AZs": {
+      "Description": "Choose AZ for Priv-Subnet1",
+      "Type": "AWS::EC2::AvailabilityZone::Name"
+    },
+    "Subnet4AZs": {
+      "Description": "Choose AZ for Priv-Subnet2",
+      "Type": "AWS::EC2::AvailabilityZone::Name"
+    }
+  },
+
+  "Mappings": {
+
+  },
+  "Conditions": {
+
+  },
+  "Resources": {
+    "MyVpc": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "InstanceTenancy": "default",
+        "Tags": [{
+          "Key": "Name",
+          "Value": "MyVpc"
+        }]
+      }
+    },
+    "Subnet1": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "MapPublicIpOnLaunch": true,
+        "AvailabilityZone": {
+          "Ref": "Subnet1AZs"
+        },
+        "VpcId": {
+          "Ref": "MyVpc"
+        },
+        "CidrBlock": {
+          "Ref": "Subnet1Cidr"
+        },
+        "Tags": [{
+          "Key": "Name",
+          "Value": "Pub-Subnet1"
+        }]
+      }
+    },
+    "Subnet2": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "MapPublicIpOnLaunch": true,
+        "AvailabilityZone": {
+          "Ref": "Subnet2AZs"
+        },
+        "VpcId": {
+          "Ref": "MyVpc"
+        },
+        "CidrBlock": {
+          "Ref": "Subnet2Cidr"
+        },
+        "Tags": [{
+          "Key": "Name",
+          "Value": "Pub-Subnet2"
+        }]
+      }
+    },
+    "Subnet3": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "MapPublicIpOnLaunch": false,
+        "AvailabilityZone": {
+          "Ref": "Subnet3AZs"
+        },
+        "VpcId": {
+          "Ref": "MyVpc"
+        },
+        "CidrBlock": {
+          "Ref": "Subnet3Cidr"
+        },
+        "Tags": [{
+          "Key": "Name",
+          "Value": "Priv-Subnet1"
+        }]
+      }
+    },
+    "Subnet4": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "MapPublicIpOnLaunch": false,
+        "AvailabilityZone": {
+          "Ref": "Subnet4AZs"
+        },
+        "VpcId": {
+          "Ref": "MyVpc"
+        },
+        "CidrBlock": {
+          "Ref": "Subnet4Cidr"
+        },
+        "Tags": [{
+          "Key": "Name",
+          "Value": "Priv-Subnet2"
+        }]
+      }
+    },
+    "MyVPCIGW": {
+      "Type": "AWS::EC2::InternetGateway",
+      "Properties": {
+        "Tags": [{
+          "Key": "Name",
+          "Value": "MyVPCIGW"
+        }]
+      }
+    },
+    "EIPNATAZ1": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc"
+      }
+    },
+    "NATAZ1": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Subnet2"
+        },
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "EIPNATAZ1",
+            "AllocationId"
+          ]
+        }
+      }
+    },
+    "NATAZ1Route": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "NATAZ1"
+        },
+        "RouteTableId": {
+          "Ref": "SubnetRTpriv"
+        }
+      }
+    },
+    "AttachGateway": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "VpcId": {
+          "Ref": "MyVpc"
+        },
+        "InternetGatewayId": {
+          "Ref": "MyVPCIGW"
+        }
+      }
+    },
+    "SubnetRTpub": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "MyVpc"
+        },
+        "Tags": [{
+          "Key": "Name",
+          "Value": "SubnetRTpub"
+        }]
+      }
+    },
+    "SubnetRTpriv": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "MyVpc"
+        },
+        "Tags": [{
+          "Key": "Name",
+          "Value": "SubnetRTpriv"
+        }]
+      }
+    },
+    "RouteIGW": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "SubnetRTpub"
+        },
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "MyVPCIGW"
+        }
+      }
+    },
+    "Subnet1RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Subnet1"
+        },
+        "RouteTableId": {
+          "Ref": "SubnetRTpub"
+        }
+      }
+    },
+    "Subnet2RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Subnet2"
+        },
+        "RouteTableId": {
+          "Ref": "SubnetRTpub"
+        }
+      }
+    },
+    "Subnet3RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Subnet3"
+        },
+        "RouteTableId": {
+          "Ref": "SubnetRTpriv"
+        }
+      }
+    },
+    "Subnet4RouteTableAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "SubnetId": {
+          "Ref": "Subnet4"
+        },
+        "RouteTableId": {
+          "Ref": "SubnetRTpriv"
+        }
+      }
+    }
+  },
+
+  "Outputs": {
+
+  }
+}
